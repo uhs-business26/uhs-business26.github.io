@@ -374,7 +374,7 @@ textarea.inp{min-height:104px;resize:vertical;line-height:1.6}
 .lk{margin:14px 0 0;border:1px solid #bae6fd;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border-radius:14px;padding:13px 14px;text-align:left}
 .lk[hidden]{display:none}
 .lk-h{font-size:11.5px;font-weight:800;color:#0369a1;letter-spacing:-.01em}
-.lk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.lk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:9px;max-width:520px}
 .lk-cell{background:#fff;border:1px solid #bae6fd;border-radius:11px;padding:9px 10px}
 .lk-k{display:block;font-size:10px;font-weight:800;color:#0891b2;letter-spacing:.02em}
 .lk-cell b{display:block;margin-top:3px;font-size:19px;font-weight:800;color:var(--navy);letter-spacing:-.01em}
@@ -1044,6 +1044,14 @@ footer b{color:#64748b}
         <div class="ic">✓</div>
         <h3>대여 신청이 접수되었습니다</h3>
         <p>대여 정보를 확인하고 <b>경영관 2층 북카페</b>에서 수령해 주세요.</p>
+        <div class="lk" id="rentalLocker" hidden>
+          <div class="lk-h">🔐 사물함 안내 · 경영관 2층 북카페</div>
+          <div class="lk-grid">
+            <div class="lk-cell"><span class="lk-k">사물함 번호</span><b id="lkNo">—</b></div>
+            <div class="lk-cell"><span class="lk-k">비밀번호</span><b class="pin" id="lkPin">—</b></div>
+          </div>
+          <p class="lk-m" id="lkMemo">비밀번호를 눌러 자물쇠를 열고 물품을 꺼낸 뒤 다시 잠가 주세요. 이 화면을 벗어나면 비밀번호는 다시 표시되지 않습니다.</p>
+        </div>
         <div class="receipt" id="rentalReceipt"></div>
         <button class="btn-ghost" type="button" id="rentalAgain">다른 물품 신청하기</button>
       </div>
@@ -2012,6 +2020,7 @@ window.__orbitonMain = function(){
     });
     $('rentalAgain').addEventListener('click', function(){
       $('rentalDone').classList.remove('on');
+      $('rentalLocker').hidden = true;
       $('rentalForm').style.display = '';
       $('rentalForm').reset();
       applySessionToForm();
@@ -2057,6 +2066,7 @@ window.__orbitonMain = function(){
     if(nights > MAX_NIGHTS) return showErr('rentalErr','대여 기간은 최대 1박 2일입니다. 반납 예정일은 대여일 다음 날까지만 선택할 수 있습니다.');
     if(!payload.agree) return showErr('rentalErr','위 대여 주의사항을 확인했으며 이에 동의합니다.에 체크해 주세요.');
     showErr('rentalErr','');
+    $('rentalLocker').hidden = true;
 
     var btn = $('rentalSubmit');
     btn.disabled = true;
@@ -2079,6 +2089,15 @@ window.__orbitonMain = function(){
           '<div><span>반납 예정</span><span>'+esc(res.due)+'</span></div>'+
           '<div><span>접수 일시</span><span>'+esc(res.stamp)+'</span></div>'+
           '<div><span>해당 품목 대여 가능</span><span>'+esc(res.remaining)+'점</span></div>';
+        var lk = res.locker;
+        if(lk && (lk.no || lk.pin)){
+          $('lkNo').textContent = lk.no || '—';
+          $('lkPin').textContent = lk.pin || '—';
+          $('lkMemo').innerHTML = '비밀번호를 눌러 자물쇠를 열고 물품을 꺼낸 뒤 다시 잠가 주세요. 이 화면을 벗어나면 비밀번호는 다시 표시되지 않습니다.';
+          $('rentalLocker').hidden = false;
+        } else {
+          $('rentalLocker').hidden = true;
+        }
         $('rentalForm').style.display = 'none';
         $('rentalDone').classList.add('on');
         window.scrollTo({ top:0, behavior:'smooth' });
